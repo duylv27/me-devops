@@ -27,16 +27,16 @@
 ## Scale
 ### Auto Scaling
 #### HPA (Horizontal Pod Auto scale)
-  ![img.png](HPA.png)
+  ![img.png](media/HPA.png)
 - Minimal downtime
 #### VPA (Vertical Pod Auto scale)
-  ![img_1.png](VPA.png)
+  ![img_1.png](media/VPA.png)
 - Potentially require downtime
 
 ### High Availability
 #### Zero downtime
 Deployment Strategy: Rolling Update, Recreate.
-![img_2.png](rolling-update.png)
+![img_2.png](media/rolling-update.png)
 
 #### Auto Healing Capability
 Detect failure and recover application.
@@ -49,7 +49,7 @@ Provide metrics and functions to integrate with 3rd tools.
 # What is Kubernetes?
 Kubernetes is **Container Orchestrator**.
 Dividing resource by group called **namespace** (database, application, etc.), they are **isolated**.
-![img_3.png](orchestrator.png)
+![img_3.png](media/orchestrator.png)
 
 ## Kubernetes Components
 ![Components of Kubernetes](https://kubernetes.io/images/docs/components-of-kubernetes.svg)
@@ -108,7 +108,7 @@ spec:
         ports:
         - containerPort: 80
 ```
-![img_4.png](deployment.png)
+![img_4.png](media/deployment.png)
 
 
 ## StatefulSets
@@ -244,7 +244,7 @@ Indicate when to restart the pod.
 Terminate all old version pods, then create new version pods.
 
 
-![img_5.png](recreate.png)
+![img_5.png](media/recreate.png)
 
 **Use case:** Our business not allow to have 2 different version of 
 applications running (e.g. huge update in application, etc.).
@@ -256,7 +256,7 @@ applications running (e.g. huge update in application, etc.).
 ### Rolling update
 Create a few new pods, then terminate old ones correspondingly.
 
-![img_6.png](rolling-update-1.png)
+![img_6.png](media/rolling-update-1.png)
 
 **Use case:** Our business allow to have 2 different version of
 applications running.
@@ -274,7 +274,7 @@ k8s will ensure that when pod starts server will have enough resource for it.
 
 **Resource Limit:** limit resource for a pod
 
-![img_7.png](resource-request-limit.png)
+![img_7.png](media/resource-request-limit.png)
 
 ## Cronjob
 
@@ -485,7 +485,7 @@ spec:
 - Independent to pod's lifecycle.
 - Asked bt pods.
 
-![img_8.png](persistent-volume.png)#### Scenario
+![img_8.png](media/persistent-volume.png)#### Scenario
 
 ```yml
 apiVersion: v1
