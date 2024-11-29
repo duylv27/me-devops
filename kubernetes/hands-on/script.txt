@@ -1,0 +1,10 @@
+# create a new namespace called “eks-ns” if it is not yet present:
+kubectl create ns eks-ns
+
+# Change default working namespace to that one
+kubectl config set-context --current --namespace eks-ns
+
+# verify if you’ve set to this namespace:
+kubectl config view --minify | grep namespace
+kubectl config view --minify | findstr namespace # For Window
+
