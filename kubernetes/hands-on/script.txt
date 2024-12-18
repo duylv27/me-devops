@@ -7,4 +7,3 @@ kubectl config set-context --current --namespace eks-ns
 # verify if you’ve set to this namespace:
 kubectl config view --minify | grep namespace
 kubectl config view --minify | findstr namespace # For Window
-

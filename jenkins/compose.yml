@@ -1,0 +1,32 @@
+version: "3.8"
+services:
+  jenkins:
+    image: jenkins/jenkins
+    environment:
+      - DOCKER_HOST=tcp://docker:2376
+      - DOCKER_CERT_PATH=/certs/client
+      - DOCKER_TLS_VERIFY=1
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - docker-certs:/certs/client:ro
+    depends_on:
+      - docker
+    networks:
+      - shared-network
+
+  docker:
+    image: docker:dind
+    privileged: true
+    command: ["--host=tcp://0.0.0.0:2376", "--tlsverify", "--tlscacert=/certs/server/ca.pem", "--tlscert=/certs/server/cert.pem", "--tlskey=/certs/server/key.pem"]
+    networks:
+      - shared-network
+
+volumes:
+  jenkins_home:
+  docker-certs:
+
+networks:
+  shared-network:
