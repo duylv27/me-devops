@@ -19,12 +19,13 @@ Jenkins pipelines, enabling modularization,
 code reuse, and consistent implementation of CI/CD processes.
 
 ### Jenkins Agent
-
-
 ### Jenkins Node
 
-## Common command
-### Install jenkins on Ubuntu.
+---
+## Common commands
+### 1. Installation
+
+#### 1.1. Local Ubuntu
 ```bash
 # Install
 wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key |sudo gpg --dearmor -o /usr/share/keyrings/jenkins.gpg
@@ -47,8 +48,7 @@ sudo apt remove --purge jenkins
 
 ---
 
-### AWS
-On EC2.
+#### 1.2. AWS - EC2 Linux
 ```bash
 sudo yum update –y
 
@@ -69,5 +69,18 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 
 sudo yum install git -y
 sudo yum install docker
+sudo systemctl start docker
 sudo usermod -a -G docker jenkins
 ```
+
+---
+
+### 2. Setup
+
+#### 2.1. Suggested Plugins:
+- Docker Pipeline
+- Pipeline Utility Steps
+- Stage View
+
+#### 2.2. Credentials
+Usually credentials to access source code. It should be `github`, `gitlab`, `docker` access key, etc.
