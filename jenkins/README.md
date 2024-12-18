@@ -19,13 +19,14 @@ Jenkins pipelines, enabling modularization,
 code reuse, and consistent implementation of CI/CD processes.
 
 ### Jenkins Agent
-
-
 ### Jenkins Node
 
-## Common command
-- Install jenkins on Ubuntu.
-```
+---
+## Common commands
+### 1. Installation
+
+#### 1.1. Local Ubuntu
+```bash
 # Install
 wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key |sudo gpg --dearmor -o /usr/share/keyrings/jenkins.gpg
 sudo sh -c 'echo deb [signed-by=/usr/share/keyrings/jenkins.gpg] http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
@@ -44,3 +45,42 @@ sudo systemctl restart jenkins
 # Remove
 sudo apt remove --purge jenkins
 ```
+
+---
+
+#### 1.2. AWS - EC2 Linux
+```bash
+sudo yum update –y
+
+# Install Jenkins
+sudo wget -O /etc/yum.repos.d/jenkins.repo \
+    https://pkg.jenkins.io/redhat-stable/jenkins.repo
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+sudo yum upgrade
+sudo dnf install java-17-amazon-corretto -y
+sudo yum install jenkins -y
+
+# Start Jenkins
+sudo systemctl enable jenkins
+sudo systemctl start jenkins
+sudo systemctl status jenkins
+
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+sudo yum install git -y
+sudo yum install docker
+sudo systemctl start docker
+sudo usermod -a -G docker jenkins
+```
+
+---
+
+### 2. Setup
+
+#### 2.1. Suggested Plugins:
+- Docker Pipeline
+- Pipeline Utility Steps
+- Stage View
+
+#### 2.2. Credentials
+Usually credentials to access source code. It should be `github`, `gitlab`, `docker` access key, etc.
