@@ -67,10 +67,21 @@ sudo systemctl status jenkins
 
 sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 
+# Install git
 sudo yum install git -y
+
+# Install git
 sudo yum install docker
 sudo systemctl start docker
 sudo usermod -a -G docker jenkins
+
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+kubectl version --client
+
+aws eks update-kubeconfig --region <region> --name <cluster name>
+# aws eks update-kubeconfig --region us-east-1 --name eks-cluster
+# curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.27.16/2024-11-15/bin/linux/amd64/kubectl
 ```
 
 ---
