@@ -6,26 +6,18 @@ provider "aws" {
 data "aws_availability_zones" "available" {}
 
 locals {
-  # newbits is the new mask for the subnet, which means it will divide the VPC into 256 (2^(32-24)) subnets.
-  newbits = 8
 
-  # netcount is the number of subnets that we need, which is 6 in this case
-  netcount = 6
-
-  # cidrsubnet function is used to divide the VPC CIDR block into multiple subnets
-  all_subnets = [for i in range(local.netcount) : cidrsubnet(var.vpc_cidr, local.newbits, i)]
-
-  # we create 3 public subnets and 3 private subnets using these subnet CIDRs
-  public_subnets  = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+  public_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
   private_subnets = ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]
-  intra_subnets   = ["10.0.7.0/24", "10.0.8.0/24", "10.0.9.0/24"]
+  intra_subnets = ["10.0.7.0/24", "10.0.8.0/24", "10.0.9.0/24"]
 
+  ec2_name = "my-ec2-instance"
 }
 
 # vpc module to create vpc, subnets, NATs, IGW etc..
 module "vpc_and_subnets" {
   # invoke public vpc module
-  source  = "terraform-aws-modules/vpc/aws"
+  source = "terraform-aws-modules/vpc/aws"
   version = "5.0.0"
 
   # vpc name
@@ -40,20 +32,20 @@ module "vpc_and_subnets" {
   # public and private subnets
   private_subnets = local.private_subnets
   public_subnets  = local.public_subnets
-  intra_subnets   = local.intra_subnets
+  intra_subnets = local.intra_subnets
 
   # create nat gateways
-  enable_nat_gateway     = var.enable_nat_gateway
-  single_nat_gateway     = var.single_nat_gateway
+  enable_nat_gateway = var.enable_nat_gateway
+  single_nat_gateway = var.single_nat_gateway
   one_nat_gateway_per_az = var.one_nat_gateway_per_az
 
   # enable dns hostnames and support
   enable_dns_hostnames = true
-  enable_dns_support   = var.enable_dns_support
+  enable_dns_support = var.enable_dns_support
 
   # tags for public, private subnets and vpc
-  tags                = var.tags
-  public_subnet_tags  = var.additional_public_subnet_tags
+  tags               = var.tags
+  public_subnet_tags = var.additional_public_subnet_tags
   private_subnet_tags = var.additional_private_subnet_tags
 
   # create internet gateway
@@ -69,23 +61,23 @@ resource "aws_security_group" "ec2_sg" {
   name        = "ec2_sg"
 
   ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
+    from_port = 22
+    to_port   = 22
+    protocol  = "tcp"
     cidr_blocks = [var.allow_ssh_cidr]
   }
 
   ingress {
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
+    from_port = 8080
+    to_port   = 8080
+    protocol  = "tcp"
     cidr_blocks = [var.allow_ssh_cidr]
   }
 
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -96,63 +88,82 @@ resource "aws_security_group" "ec2_sg" {
 
 
 ###########################################################################################
-# EKS
+# EKS, EKS Security Group
 ###########################################################################################
 module "eks" {
   # invoke public eks module
-  source  = "terraform-aws-modules/eks/aws"
+  source = "terraform-aws-modules/eks/aws"
   version = "19.15.3"
 
   # eks cluster name and version
-  cluster_name    = var.eks_cluster_name
+  cluster_name = var.eks_cluster_name
   cluster_version = var.k8s_version
 
   # vpc & subnet
-  vpc_id                    = module.vpc_and_subnets.vpc_id
-  subnet_ids                = module.vpc_and_subnets.private_subnets
-  control_plane_subnet_ids  = module.vpc_and_subnets.intra_subnets
+  vpc_id                   = module.vpc_and_subnets.vpc_id
+  subnet_ids               = module.vpc_and_subnets.private_subnets
+  control_plane_subnet_ids = module.vpc_and_subnets.intra_subnets
 
-  # to enable public and private access for eks cluster endpoint
-  cluster_endpoint_private_access = true
-  cluster_endpoint_public_access  = true
+  cluster_endpoint_public_access = true
+  enable_irsa                    = true
 
-  # create an OpenID Connect Provider for EKS to enable IRSA
-  enable_irsa = true
-
-  # install eks managed addons
-  # more details are here - https://docs.aws.amazon.com/eks/latest/userguide/eks-add-ons.html
   cluster_addons = {
-    # extensible DNS server that can serve as the Kubernetes cluster DNS
     coredns = {
-      preserve    = true
       most_recent = true
     }
 
-    # maintains network rules on each Amazon EC2 node. It enables network communication to your Pods
     kube-proxy = {
       most_recent = true
     }
 
-    # a Kubernetes container network interface (CNI) plugin that provides native VPC networking for your cluster
     vpc-cni = {
       most_recent = true
     }
   }
 
-  # eks managed node group named worker
-  eks_managed_node_groups = var.workers_config
+  cluster_security_group_additional_rules = {
+    ingress_ec2_tcp = {
+      description              = "Access EKS from EC2 instance."
+      protocol                 = "tcp"
+      from_port                = 443
+      to_port                  = 443
+      type                     = "ingress"
+      source_security_group_id = aws_security_group.ec2_sg.id
+    }
+  }
 
+  eks_managed_node_group_defaults = {
+    ami_type = "AL2_x86_64"
+    instance_types = ["m5.large"]
+
+    attach_cluster_primary_security_group = true
+  }
+
+  eks_managed_node_groups = {
+    amc-cluster-wg = {
+      min_size     = 1
+      max_size     = 2
+      desired_size = 1
+
+      instance_types = ["t3.large"]
+      capacity_type = "SPOT"
+    }
+  }
 }
 
+###########################################################################################
 # EC2 instance
+###########################################################################################
 resource "aws_instance" "my_instance" {
   ami                         = var.ami_id
   instance_type               = var.instance_type
-  vpc_security_group_ids      = [aws_security_group.ec2_sg.id]
+  vpc_security_group_ids = [aws_security_group.ec2_sg.id]
   subnet_id                   = module.vpc_and_subnets.public_subnets[0]
   associate_public_ip_address = true
 
+  user_data = file("install.sh")
+
   tags = {
-    Name = "my-ec2-instance"
+    Name = local.ec2_name
   }
 }

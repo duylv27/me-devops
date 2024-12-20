@@ -143,3 +143,7 @@ variable "workers_config" {
   }
 }
 
+variable "eks_security_group_id" {
+  default = "sg-eks"
+}
+
