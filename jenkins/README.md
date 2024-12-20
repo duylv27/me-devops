@@ -67,10 +67,24 @@ sudo systemctl status jenkins
 
 sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 
+# Install git
 sudo yum install git -y
+
+# Install git
 sudo yum install docker
 sudo systemctl start docker
 sudo usermod -a -G docker jenkins
+
+# Install kubectl
+curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.27.16/2024-11-15/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$PATH
+
+# aws eks update-kubeconfig --region <region> --name <cluster name>
+# aws eks update-kubeconfig --region us-east-1 --name eks_cluster
+# curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.27.16/2024-11-15/bin/linux/amd64/kubectl
+# chmod +x ./kubectl
+# mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$PATH
 ```
 
 ---

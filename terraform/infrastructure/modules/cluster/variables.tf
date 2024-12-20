@@ -47,7 +47,7 @@ variable "allow_ssh_cidr" {
 }
 
 ###########################################################################################
-# VPC varialble
+# VPC variable
 ###########################################################################################
 variable "vpc_name" {
   type        = string
@@ -113,3 +113,37 @@ variable "instance_tenancy" {
   type        = string
   default     = "default"
 }
+
+###########################################################################################
+# EKS variables
+###########################################################################################
+variable "eks_cluster_name" {
+  type        = string
+  description = "eks cluster name"
+}
+
+variable "k8s_version" {
+  type        = string
+  description = "kubernetes version"
+  default     = "1.27"
+}
+
+variable "workers_config" {
+  type        = map(any)
+  description = "workers config"
+  default = {
+    worker = {
+      min_size     = 1
+      max_size     = 2
+      desired_size = 1
+
+      instance_types = ["t3.large"]
+      capacity_type  = "SPOT"
+    }
+  }
+}
+
+variable "eks_security_group_id" {
+  default = "sg-eks"
+}
+

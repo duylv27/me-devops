@@ -1,4 +1,4 @@
-# create a new namespace called “eks-ns” if it is not yet present:
+# create a new namespace called "eks-ns" if it is not yet present:
 kubectl create ns eks-ns
 
 # Change default working namespace to that one
