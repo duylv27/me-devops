@@ -82,6 +82,7 @@ mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$P
 
 # aws eks update-kubeconfig --region <region> --name <cluster name>
 # aws eks update-kubeconfig --region us-east-1 --name eks_cluster
+# aws eks update-kubeconfig --region us-west-2 --name qt-practical-devops-eks
 # curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.27.16/2024-11-15/bin/linux/amd64/kubectl
 # chmod +x ./kubectl
 # mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$PATH
@@ -95,6 +96,9 @@ mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$P
 - Docker Pipeline
 - Pipeline Utility Steps
 - Stage View
+- AWS Credentials
+- Amazon EC2
+- Amazon ECR
 
 #### 2.2. Credentials
 Usually credentials to access source code. It should be `github`, `gitlab`, `docker` access key, etc.

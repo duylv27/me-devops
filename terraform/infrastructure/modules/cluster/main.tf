@@ -14,7 +14,9 @@ locals {
   ec2_name = "my-ec2-instance"
 }
 
-# vpc module to create vpc, subnets, NATs, IGW etc..
+###########################################################################################
+# VPC, subnet, etc.
+###########################################################################################
 module "vpc_and_subnets" {
   # invoke public vpc module
   source = "terraform-aws-modules/vpc/aws"
@@ -54,7 +56,6 @@ module "vpc_and_subnets" {
 
 }
 
-# Security Group
 resource "aws_security_group" "ec2_sg" {
   vpc_id      = module.vpc_and_subnets.vpc_id
   description = "Security Group for EC2"
@@ -67,6 +68,7 @@ resource "aws_security_group" "ec2_sg" {
     cidr_blocks = [var.allow_ssh_cidr]
   }
 
+  # Allow access for Jenkins
   ingress {
     from_port = 8080
     to_port   = 8080
@@ -86,70 +88,88 @@ resource "aws_security_group" "ec2_sg" {
   }
 }
 
-
 ###########################################################################################
 # EKS, EKS Security Group
 ###########################################################################################
-module "eks" {
-  # invoke public eks module
-  source = "terraform-aws-modules/eks/aws"
-  version = "19.15.3"
+# module "eks" {
+#   source  = "terraform-aws-modules/eks/aws"
+#   version = "19.15.3"
+#
+#   cluster_name = var.eks_cluster_name
+#   cluster_version = var.k8s_version
+#
+#   # vpc & subnet
+#   vpc_id                   = module.vpc_and_subnets.vpc_id
+#   subnet_ids               = module.vpc_and_subnets.private_subnets
+#   control_plane_subnet_ids = module.vpc_and_subnets.intra_subnets
+#
+#   cluster_endpoint_public_access = true
+#   enable_irsa                    = true
+#
+#   cluster_addons = {
+#     coredns = {
+#       most_recent = true
+#     }
+#     kube-proxy = {
+#       most_recent = true
+#     }
+#     vpc-cni = {
+#       most_recent = true
+#     }
+#   }
+#
+#   # Add inbound rule, allow access from EC2.
+#   cluster_security_group_additional_rules = {
+#     ingress_ec2_tcp = {
+#       description              = "Access EKS from EC2 instance."
+#       protocol                 = "tcp"
+#       from_port                = 443
+#       to_port                  = 443
+#       type                     = "ingress"
+#       source_security_group_id = aws_security_group.ec2_sg.id
+#     }
+#   }
+#
+#   eks_managed_node_group_defaults = {
+#     ami_type                              = "AL2_x86_64"
+#     instance_types = ["m5.large"]
+#     attach_cluster_primary_security_group = true
+#   }
+#
+#   eks_managed_node_groups = {
+#     amc-cluster-wg = {
+#       min_size     = 1
+#       max_size     = 2
+#       desired_size = 1
+#
+#       instance_types = ["t3.large"]
+#       capacity_type = "SPOT"
+#     }
+#   }
+# }
 
-  # eks cluster name and version
-  cluster_name = var.eks_cluster_name
-  cluster_version = var.k8s_version
-
-  # vpc & subnet
-  vpc_id                   = module.vpc_and_subnets.vpc_id
-  subnet_ids               = module.vpc_and_subnets.private_subnets
-  control_plane_subnet_ids = module.vpc_and_subnets.intra_subnets
-
-  cluster_endpoint_public_access = true
-  enable_irsa                    = true
-
-  cluster_addons = {
-    coredns = {
-      most_recent = true
-    }
-
-    kube-proxy = {
-      most_recent = true
-    }
-
-    vpc-cni = {
-      most_recent = true
-    }
+###########################################################################################
+# ECR
+###########################################################################################
+resource "aws_ecr_repository" "example" {
+  name = "example-ecr-repo"
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+  encryption_configuration {
+    encryption_type = "AES256"
   }
 
-  cluster_security_group_additional_rules = {
-    ingress_ec2_tcp = {
-      description              = "Access EKS from EC2 instance."
-      protocol                 = "tcp"
-      from_port                = 443
-      to_port                  = 443
-      type                     = "ingress"
-      source_security_group_id = aws_security_group.ec2_sg.id
-    }
-  }
-
-  eks_managed_node_group_defaults = {
-    ami_type = "AL2_x86_64"
-    instance_types = ["m5.large"]
-
-    attach_cluster_primary_security_group = true
-  }
-
-  eks_managed_node_groups = {
-    amc-cluster-wg = {
-      min_size     = 1
-      max_size     = 2
-      desired_size = 1
-
-      instance_types = ["t3.large"]
-      capacity_type = "SPOT"
-    }
+  tags = {
+    Team        = "DevOps"
   }
 }
+
+output "ecr_repository_url" {
+  value       = aws_ecr_repository.example.repository_url
+  description = "The URL of the ECR repository"
+}
+
 
 ###########################################################################################
 # EC2 instance
